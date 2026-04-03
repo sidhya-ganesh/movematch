@@ -1,2 +1,7 @@
 [phases.setup]
-nixPkgs = ["ffmpeg"]
+nixPkgs = ["ffmpeg", "libGL", "libglib2.0"]
+```
+
+**2. Update `backend/requirements.txt`** — replace `opencv-python-headless` with:
+```
+opencv-python-headless==4.8.1.78

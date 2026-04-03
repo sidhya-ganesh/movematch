@@ -596,6 +596,16 @@ async def _process_submission(sid: str, rid: str, vpath: str, jid: str):
         )
 
         # Upload overlay to Supabase Storage
+        if overlay_ok:
+            import subprocess
+            converted = overlay.replace(".mp4", "_web.mp4")
+            subprocess.run([
+                "ffmpeg", "-i", overlay, "-vcodec", "libx264",
+                "-acodec", "aac", converted, "-y"
+            ], capture_output=True)
+            if Path(converted).exists():
+                overlay = converted
+
         overlay_url = None
         if overlay_ok:
             pub_url = upload_file_to_storage("results", f"overlays/{sid}_overlay.mp4", overlay)

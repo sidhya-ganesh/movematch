@@ -275,8 +275,16 @@ def _render_overlay_cv2(
     half_w = width // 2
 
     # fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    fourcc = cv2.VideoWriter_fourcc(*"avc1")
-    out = cv2.VideoWriter(output_path, fourcc, source_fps, (width, height))
+    # fourcc = cv2.VideoWriter_fourcc(*"avc1")
+    # fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    # out = cv2.VideoWriter(output_path, fourcc, source_fps, (width, height))
+
+    out = None
+    for codec in ["avc1", "mp4v", "XVID"]:
+        fourcc = cv2.VideoWriter_fourcc(*codec)
+        out = cv2.VideoWriter(output_path, fourcc, source_fps, (width, height))
+        if out.isOpened():
+            break
 
     # VideoWriter silently returns an unopened writer if the codec is missing
     if not out.isOpened():

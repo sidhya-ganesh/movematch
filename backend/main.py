@@ -556,7 +556,8 @@ def _update_job(jid: str, progress: int = None, status: str = None, error: str =
 async def _process_reference(rid: str, vpath: str, jid: str):
     try:
         _update_job(jid, progress=10)
-        out = str(RESULTS_DIR / f"{rid}_pose.json")
+        # out = str(RESULTS_DIR / f"{rid}_pose.json")
+        out = str(RESULTS_DIR / f"{rid}_pose.json").replace("\\", "/")
         await asyncio.to_thread(
             extract_pose_sequence, vpath, out,
             lambda p: _update_job(jid, progress=10 + int(p * 85))
@@ -574,7 +575,8 @@ async def _process_reference(rid: str, vpath: str, jid: str):
 async def _process_submission(sid: str, rid: str, vpath: str, jid: str):
     try:
         _update_job(jid, progress=5)
-        student_pose = str(RESULTS_DIR / f"{sid}_pose.json")
+        # student_pose = str(RESULTS_DIR / f"{sid}_pose.json")
+        student_pose = str(RESULTS_DIR / f"{sid}_pose.json").replace("\\", "/")
         await asyncio.to_thread(
             extract_pose_sequence, vpath, student_pose,
             lambda p: _update_job(jid, progress=5 + int(p * 40))
@@ -585,14 +587,17 @@ async def _process_submission(sid: str, rid: str, vpath: str, jid: str):
             cur.execute("SELECT pose_data_path, video_path FROM routines WHERE id = %s", (rid,))
             routine = cur.fetchone()
 
-        scores = await asyncio.to_thread(compare_sequences, routine["pose_data_path"], student_pose)
+        ref_pose_path  = routine["pose_data_path"].replace("\\", "/")
+        ref_video_path = routine["video_path"].replace("\\", "/")
+
+        scores = await asyncio.to_thread(compare_sequences, ref_pose_path, student_pose)
         _update_job(jid, progress=75)
 
         overlay      = str(RESULTS_DIR / f"{sid}_overlay.mp4")
         overlay_ok, overlay_error = await asyncio.to_thread(
             generate_skeleton_overlay,
-            routine["video_path"], vpath,
-            routine["pose_data_path"], student_pose, overlay
+            ref_video_path, vpath,
+            ref_pose_path, student_pose, overlay
         )
 
         # Upload overlay to Supabase Storage

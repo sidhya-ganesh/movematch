@@ -16,8 +16,3 @@ RUN pip install -r requirements.txt
 COPY . .
 
 CMD uvicorn main:app --host 0.0.0.0 --port $PORT
-```
-
-Also update `requirements.txt` — change `opencv-python-headless` back to:
-```
-opencv-python

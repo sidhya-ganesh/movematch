@@ -367,10 +367,10 @@ async def create_routine(
         )
         cur.execute(
             """INSERT INTO routines (id, teacher_id, name, difficulty, description,
-               status, video_path, reference_video_url, archived, created_at)
-               VALUES (%s, %s, %s, %s, %s, 'processing', %s, %s, false, NOW())""",
+            status, video_path, reference_video_url, archived, created_at, job_id)
+            VALUES (%s, %s, %s, %s, %s, 'processing', %s, %s, false, NOW(), %s)""",
             (rid, str(teacher["id"]), name, difficulty, description,
-             str(vpath), ref_video_url)
+            str(vpath), ref_video_url, jid)
         )
 
     background_tasks.add_task(_process_reference, rid, str(vpath), jid)

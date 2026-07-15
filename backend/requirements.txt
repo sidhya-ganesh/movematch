@@ -1,16 +1,3 @@
-"""
-fastapi
-uvicorn[standard]
-python-multipart
-pydantic
-bcrypt
-PyJWT
-mediapipe
-opencv-python-headless
-numpy
-psycopg2-binary
-supabase
-"""
 fastapi
 uvicorn[standard]
 python-multipart

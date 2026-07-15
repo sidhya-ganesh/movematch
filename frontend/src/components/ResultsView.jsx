@@ -52,9 +52,14 @@ export default function ResultsView({ submission, onRetry, isTeacherView=false }
   const overlayUrl = mediaUrl(submission?.overlay_url);
 
   const gl = score>=80?"Great performance!":score>=62?"Good effort":"Keep practising";
-  const gm = score>=80?"Strong alignment throughout. Focus on arms to push toward the top rank."
-           : score>=62?"Solid foundation. Arms and knee tracking need the most work."
-           :            "Consistent repetition builds the muscle memory. Keep going.";
+  // Prefer real, per-student coaching feedback from Claude; fall back to a
+  // generic threshold message only if it's missing (e.g. older submissions
+  // scored before this feature existed, or the API call failed silently).
+  const gm = submission?.coaching_feedback
+    ? submission.coaching_feedback
+    : score>=80?"Strong alignment throughout. Focus on arms to push toward the top rank."
+    : score>=62?"Solid foundation. Arms and knee tracking need the most work."
+    :            "Consistent repetition builds the muscle memory. Keep going.";
 
   const weak = Object.entries(joints).filter(([,v])=>v<80).sort((a,b)=>a[1]-b[1]).slice(0,3);
 

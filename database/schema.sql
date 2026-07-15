@@ -63,6 +63,7 @@ create table submissions (
     video_path     text,
     overall_score  numeric(5,2),
     joint_scores   jsonb,
+    coaching_feedback text,
     overlay_url    text,
     overlay_error  text,
     job_id         uuid references jobs(id),

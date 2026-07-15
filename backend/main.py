@@ -23,6 +23,7 @@ from supabase import create_client, Client
 
 from pose_extractor import extract_pose_sequence
 from comparison_engine import compare_sequences, generate_skeleton_overlay
+from feedback_generator import generate_coaching_feedback
 
 # ── Config ─────────────────────────────────────────────────────────────────────
 SECRET_KEY         = os.getenv("JWT_SECRET", "dev-secret-CHANGE-in-production")
@@ -205,6 +206,7 @@ class SubmissionOut(BaseModel):
     error: Optional[str] = None
     overall_score: Optional[float] = None
     joint_scores: Optional[dict] = None
+    coaching_feedback: Optional[str] = None
     overlay_url: Optional[str] = None
     overlay_error: Optional[str] = None
     created_at: float
@@ -584,13 +586,18 @@ async def _process_submission(sid: str, rid: str, vpath: str, jid: str):
         _update_job(jid, progress=50)
 
         with db() as cur:
-            cur.execute("SELECT pose_data_path, video_path FROM routines WHERE id = %s", (rid,))
+            cur.execute("SELECT name, pose_data_path, video_path FROM routines WHERE id = %s", (rid,))
             routine = cur.fetchone()
 
         ref_pose_path  = routine["pose_data_path"].replace("\\", "/")
         ref_video_path = routine["video_path"].replace("\\", "/")
 
         scores = await asyncio.to_thread(compare_sequences, ref_pose_path, student_pose)
+        _update_job(jid, progress=70)
+
+        coaching_feedback = await asyncio.to_thread(
+            generate_coaching_feedback, scores["overall"], scores["joints"], routine["name"]
+        )
         _update_job(jid, progress=75)
 
         overlay      = str(RESULTS_DIR / f"{sid}_overlay.mp4")
@@ -619,8 +626,9 @@ async def _process_submission(sid: str, rid: str, vpath: str, jid: str):
         with db() as cur:
             cur.execute(
                 """UPDATE submissions SET status = 'ready', overall_score = %s,
-                   joint_scores = %s, overlay_url = %s, overlay_error = %s WHERE id = %s""",
-                (scores["overall"], json.dumps(scores["joints"]),
+                   joint_scores = %s, coaching_feedback = %s,
+                   overlay_url = %s, overlay_error = %s WHERE id = %s""",
+                (scores["overall"], json.dumps(scores["joints"]), coaching_feedback,
                  overlay_url, overlay_error if not overlay_ok else None, sid)
             )
         _update_job(jid, progress=100, status="complete")
@@ -693,6 +701,7 @@ def _get_submission_out(sid: str) -> Optional[SubmissionOut]:
         status=s["status"], error=s.get("error"),
         overall_score=float(s["overall_score"]) if s["overall_score"] else None,
         joint_scores=joint_scores,
+        coaching_feedback=s.get("coaching_feedback"),
         overlay_url=s.get("overlay_url"),
         overlay_error=s.get("overlay_error"),
         created_at=s["created_at"].timestamp(),

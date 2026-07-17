@@ -1,4 +1,4 @@
-# MoveMatch - MVP
+# MoveMatch - Description
 Upload a reference dance video. Students upload their practice. Get instant pose comparison.
 ---
 ## Project Structure
